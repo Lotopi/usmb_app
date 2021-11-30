@@ -15,12 +15,12 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.0"
-  calendar_view:
+  calendar_view_multi_language:
     dependency: "direct main"
     description:
-      name: calendar_view
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "local-packages/calendar_view_multi_language"
+      relative: true
+    source: path
     version: "0.0.3"
   characters:
     dependency: transitive
