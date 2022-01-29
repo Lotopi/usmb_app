@@ -31,13 +31,13 @@ class _MyApp extends StatelessWidget {
       );
 }
 
-/// A day view that displays dynamically added events.
+/// A week view that displays dynamically added events.
 class _DynamicWeekView extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _DynamicWeekViewState();
 }
 
-/// The dynamic day view state.
+/// The dynamic week view state.
 class _DynamicWeekViewState extends State<_DynamicWeekView> {
 
   List _items = [];
@@ -123,7 +123,7 @@ class _DynamicWeekViewState extends State<_DynamicWeekView> {
     }
 
     // This is the function used to customize the style of a day.
-    DayViewStyle funcTest(DateTime date) => const DayViewStyle(hourRowHeight: 60 * 2);
+    DayViewStyle setDayViewStyle(DateTime date) => const DayViewStyle(hourRowHeight: 60 * 2);
 
     return WeekView(
       initialTime: const HourMinute(hour: 6, minute: 31).atDate(DateTime.now()),
@@ -134,7 +134,7 @@ class _DynamicWeekViewState extends State<_DynamicWeekView> {
       ),
       userZoomable: false,
       dates: dates,
-      dayViewStyleBuilder: funcTest,
+      dayViewStyleBuilder: setDayViewStyle,
       events: events,
     );
   }
