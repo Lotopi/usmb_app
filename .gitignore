@@ -45,3 +45,4 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 local-packages/calendar_view_multi_language/
+assets/calendar.JSON

@@ -1,4 +1,4 @@
-package com.example.untitled
+package com.example.usmb_app
 
 import io.flutter.embedding.android.FlutterActivity
 
