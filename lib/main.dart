@@ -217,6 +217,7 @@ class _DynamicWeekViewState extends State<_DynamicWeekView> {
     setState(() {
       events = [];
       _getEvents();
+      _getStringFromSharedPref();
     });
   }
 
@@ -232,7 +233,6 @@ class _DynamicWeekViewState extends State<_DynamicWeekView> {
     // Load the events if needed.
     if (!eventsAreLoaded) {
       _getStringFromSharedPref().then((_) {
-        print(selectedClass);
         _getEvents();
       });
       
