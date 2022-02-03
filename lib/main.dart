@@ -191,8 +191,8 @@ class _DynamicWeekViewState extends State<_DynamicWeekView> {
     });
     
     for (var i = 0; i < _items.length; i++) {
-      final DateTime startDate = DateTime.parse(_items[i]['DTSTART']);
-      final DateTime endDate = DateTime.parse(_items[i]['DTEND']);
+      final DateTime startDate = DateTime.parse(_items[i]['DTSTART']).toLocal();
+      final DateTime endDate = DateTime.parse(_items[i]['DTEND']).toLocal();
 
       final event = 
         FlutterWeekViewEvent(
