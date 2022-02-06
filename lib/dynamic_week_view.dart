@@ -51,6 +51,7 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
       This asynchronous function get the value of 
       the selected class.
     */
+
     final prefs = await SharedPreferences.getInstance();
     final storedSelectedClass = prefs.getString('selectedClass');
 
@@ -111,6 +112,9 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
   }
 
   Future<void> _reloadEvents() async {
+    /*
+      Reload the list of events to display.
+    */
     setState(() {
       events = [];
       _getEvents();
@@ -134,10 +138,12 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     return days;
   }
 
-  void _getDates() {
+  void _getDatesOfCurrentSchoolYear() {
+    /*
+      Get the dates for the current school year.
+    */
     DateTime now = DateTime.now();
 
-    // Get the dates for the current school year.
     if (now.month < 07) {
       dates = _getDaysInBetween(
           DateTime(now.year - 1, 08, 30), DateTime(now.year, 07, 01));
@@ -151,6 +157,7 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
   DayViewStyle _setDayViewStyle(DateTime date) =>
       const DayViewStyle(hourRowHeight: 60 * 2);
 
+  // The list of events that the calendar must display.
   List<FlutterWeekViewEvent> events = [];
 
   // The list of dates that the calendar must display.
@@ -162,7 +169,7 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
       _getEvents();
     });
 
-    _getDates();
+    _getDatesOfCurrentSchoolYear();
 
     _getGroups().then((_) => _getSelectedClassFromSharedPref()
         .then((_) => valueChoose = selectedClass));
