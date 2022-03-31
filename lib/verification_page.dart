@@ -57,8 +57,8 @@ class _VerificationPageState extends State<VerificationPage> {
     String pattern = r'(^[0-9]{6}$)';
 
     if (code == null || code.isEmpty) {
-        return "Ce champs est obligatoire.";
-      }
+      return "Ce champs est obligatoire.";
+    }
 
     if (!RegExp(pattern).hasMatch(code)) {
       return "Format incorrect";
@@ -84,12 +84,8 @@ class _VerificationPageState extends State<VerificationPage> {
     */
 
     final response = await http.post(
-      Uri.parse("${Env.urlPrefix}/verify_registration.php"),
-      body: {
-        "token": token,
-        "verification_code": code
-      }
-    );
+        Uri.parse("${Env.urlPrefix}/verify_registration.php"),
+        body: {"token": token, "verification_code": code});
 
     var data = json.decode(response.body);
 
@@ -104,7 +100,7 @@ class _VerificationPageState extends State<VerificationPage> {
 
     final prefs = await SharedPreferences.getInstance();
     final tokenValue = prefs.getString('token');
-    
+
     setState(() {
       _token = tokenValue ?? "";
     });
@@ -160,18 +156,23 @@ class _VerificationPageState extends State<VerificationPage> {
                           } else {
                             dynamic data;
 
-                            _verifyRegistration(_token, codeController.text).then((value) {
+                            _verifyRegistration(_token, codeController.text)
+                                .then((value) {
                               data = value;
 
                               setState(() {
                                 _verificationResponse = data;
                               });
-                              
+
                               if (_key.currentState!.validate()) {
                                 // Set the user state to "logged in".
                                 _setIsLoggedIn();
                                 // Go to calendar page.
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => const DynamicWeekView()));
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const DynamicWeekView()));
                               }
                             });
                           }

@@ -68,7 +68,7 @@ class _WelcomePageState extends State<WelcomePage> {
     if (_registerResponse != null) {
       if (_registerResponse["isSuccess"] == false) {
         return "Une erreur est survenue.";
-      } 
+      }
     }
 
     return null;
@@ -83,12 +83,8 @@ class _WelcomePageState extends State<WelcomePage> {
       for verification.
     */
 
-    final response = await http.post(
-      Uri.parse("${Env.urlPrefix}/register.php"),
-      body: {
-        "email": email
-      }
-    );
+    final response = await http.post(Uri.parse("${Env.urlPrefix}/register.php"),
+        body: {"email": email});
 
     var data = json.decode(response.body);
 
@@ -145,13 +141,16 @@ class _WelcomePageState extends State<WelcomePage> {
                               setState(() {
                                 _registerResponse = data;
                               });
-                              
+
                               if (_key.currentState!.validate()) {
                                 // Save the token in shared preferences.
                                 _saveToken(data["token"]).then((_) =>
-                                  // Go to verification page.
-                                  Navigator.push(context, MaterialPageRoute(builder: (context) => const VerificationPage()))
-                                );
+                                    // Go to verification page.
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const VerificationPage())));
                               }
                             });
                           }
