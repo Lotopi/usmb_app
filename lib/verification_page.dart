@@ -150,7 +150,8 @@ class _VerificationPageState extends State<VerificationPage> {
                       width: 200,
                       child: ElevatedButton(
                         onPressed: () {
-                          // If the code is not in the good format, don't send API calls.
+                          // If the code is not in the good format, don't send
+                          // API calls.
                           if (!_isGoodFormat(codeController.text)) {
                             _key.currentState!.validate();
                           } else {
@@ -167,12 +168,15 @@ class _VerificationPageState extends State<VerificationPage> {
                               if (_key.currentState!.validate()) {
                                 // Set the user state to "logged in".
                                 _setIsLoggedIn();
-                                // Go to calendar page.
-                                Navigator.push(
+                                // Go to the calendar page, and prevent the user
+                                // from going back.
+                                Navigator.pushAndRemoveUntil(
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            const DynamicWeekView()));
+                                            const DynamicWeekView()),
+                                    (_) => false);
+                                //
                               }
                             });
                           }
