@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:usmb_app/welcome_page.dart';
-//import 'package:usmb_app/verification_page.dart';
 
 import 'dynamic_week_view.dart';
 
