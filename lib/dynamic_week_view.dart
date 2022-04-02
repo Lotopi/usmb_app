@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:flutter/services.dart';
 
 import 'package:flutter_week_view/flutter_week_view.dart';
@@ -24,7 +26,7 @@ class DynamicWeekView extends StatefulWidget {
 
 /// The dynamic week view state.
 class DynamicWeekViewState extends State<DynamicWeekView> {
-  final List<String> listItem = ["Aucune"];
+  List<String> listItem = ["Aucune"];
 
   String valueChoose = "Aucune";
 
@@ -64,12 +66,17 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
           _dropDownItems = data["classes_data"]["data"];
         });
       }
+    } else {
+      print(data);
     }
   }
 
   /// Loads the list of classes and put them in [listItem], used later for a
   /// dropdown.
   void _loadListClasses() {
+    setState(() {
+      listItem = ["Aucune"];
+    });
     for (var i = 0; i < _dropDownItems.length; i++) {
       setState(() {
         listItem.add(_dropDownItems[i]);
@@ -99,6 +106,10 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedClass', newSelectedClass);
+
+    setState(() {
+      selectedClass = newSelectedClass;
+    });
   }
 
   Future<bool> _downloadCalendarData() async {
@@ -122,6 +133,8 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
           _calendarData = data["calendar_data"]["data"];
         });
       }
+    } else {
+      print(data);
     }
 
     return isSuccess;
@@ -142,7 +155,13 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
       } catch (e) {
         _items = [];
       }
+
+      //events = [];
     });
+
+    //print("items :");
+    //print(_items);
+
     for (var i = 0; i < _items.length; i++) {
       final DateTime startDate = DateTime.parse(_items[i]['DTSTART']).toLocal();
       final DateTime endDate = DateTime.parse(_items[i]['DTEND']).toLocal();
@@ -264,10 +283,13 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
               setState(() {
                 valueChoose = newValue as String;
               });
-              // If this is a different value than before, we update the data.
+
+              // If this is a different value than before, then we update the
+              // data.
               if (valueChoose != selectedClass) {
-                _changeSelectedClass(valueChoose);
-                _reloadEvents();
+                _changeSelectedClass(valueChoose).then((_) {
+                  _reloadEvents();
+                });
               }
             },
             items: listItem.map((valueItem) {
@@ -296,6 +318,33 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
         dayViewStyleBuilder: _setDayViewStyle,
         events: events,
       ),
+      floatingActionButton: FloatingActionButton(
+          child: const Icon(
+            Icons.refresh,
+          ),
+          onPressed: () {
+            _downloadListClasses().then((_) {
+              _loadListClasses();
+
+              // If the previously selected class is no longer available, then
+              // we must inform the user, and fall back to the default null
+              // class, "Aucune".
+              if (listItem.contains(selectedClass)) {
+                _reloadEvents().then((_) {
+                  Fluttertoast.showToast(msg: "Données mise à jour.");
+                });
+              } else {
+                _changeSelectedClass("Aucune").then((_) {
+                  _reloadEvents().then((_) {
+                    Fluttertoast.showToast(msg: "Données mise à jour.");
+                    Fluttertoast.showToast(
+                        msg:
+                            "La classe précédemment sélectionnée n'est plus disponible.");
+                  });
+                });
+              }
+            });
+          }),
     );
   }
 }
