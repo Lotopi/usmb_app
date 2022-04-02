@@ -103,10 +103,37 @@ class _WelcomePageState extends State<WelcomePage> {
     await prefs.setString('token', token);
   }
 
+  Widget buildAvertissement() => RichText(
+        textAlign: TextAlign.justify,
+        text: const TextSpan(
+          children: [
+            TextSpan(
+                text: 'Avertissement :',
+                style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 18,
+                    decoration: TextDecoration.underline)),
+            TextSpan(
+                text:
+                    " cette application n'est en rien affiliée à l'Université Savoie Mont Blanc (USMB),",
+                style: TextStyle(color: Colors.black, fontSize: 16)),
+            TextSpan(
+                text:
+                    " par ailleurs, celle-ci est encore en phase de développement,",
+                style: TextStyle(color: Colors.black, fontSize: 16)),
+            TextSpan(
+                text:
+                    " elle ne peut pas être considérée comme fiable, divers problèmes pouvant encore survenir.",
+                style: TextStyle(color: Colors.black, fontSize: 16))
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        appBar: AppBar(title: const Text("USMB App")),
         body: Form(
           key: _key,
           child: Center(
@@ -114,6 +141,9 @@ class _WelcomePageState extends State<WelcomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 30.0),
+                    child: SizedBox(width: 350, child: buildAvertissement())),
                 SizedBox(
                   width: 300,
                   child: TextFormField(
@@ -150,7 +180,9 @@ class _WelcomePageState extends State<WelcomePage> {
                                         context,
                                         MaterialPageRoute(
                                             builder: (context) =>
-                                                const VerificationPage())));
+                                                VerificationPage(
+                                                    email: emailController
+                                                        .text))));
                               }
                             });
                           }

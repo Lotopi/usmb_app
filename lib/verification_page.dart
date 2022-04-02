@@ -10,7 +10,9 @@ import 'dynamic_week_view.dart';
 import '../env.dart';
 
 class VerificationPage extends StatefulWidget {
-  const VerificationPage({Key? key}) : super(key: key);
+  final String email;
+
+  const VerificationPage({Key? key, required this.email}) : super(key: key);
 
   @override
   _VerificationPageState createState() => _VerificationPageState();
@@ -123,10 +125,39 @@ class _VerificationPageState extends State<VerificationPage> {
     super.initState();
   }
 
+  Widget buildInformation(email) => RichText(
+        textAlign: TextAlign.justify,
+        text: TextSpan(
+          children: [
+            const TextSpan(
+                text:
+                    'Un courriel contenant un code de vérification vous a été envoyé à l\'adresse suivante :',
+                style: TextStyle(color: Colors.black, fontSize: 16)),
+            TextSpan(
+                text: " $email.",
+                style: const TextStyle(color: Colors.blue, fontSize: 16)),
+            const TextSpan(
+                text: "\n(Pensez à regarder dans vos indésirables)",
+                style: TextStyle(color: Colors.black, fontSize: 16)),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        appBar: AppBar(
+          title: const Text("Vérification"),
+          leading: InkWell(
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: const Icon(
+              Icons.arrow_back,
+            ),
+          ),
+        ),
         body: Form(
           key: _key,
           child: Center(
@@ -134,6 +165,10 @@ class _VerificationPageState extends State<VerificationPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 30.0),
+                    child: SizedBox(
+                        width: 350, child: buildInformation(widget.email))),
                 SizedBox(
                   width: 300,
                   child: TextFormField(
