@@ -8,6 +8,12 @@ import 'package:flutter_week_view/flutter_week_view.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:http/http.dart' as http;
+
+import 'dart:convert';
+
+import '../env.dart';
+
 /// A week view that displays dynamically added events.
 class DynamicWeekView extends StatefulWidget {
   const DynamicWeekView({Key? key}) : super(key: key);
@@ -19,29 +25,54 @@ class DynamicWeekView extends StatefulWidget {
 /// The dynamic week view state.
 class DynamicWeekViewState extends State<DynamicWeekView> {
   final List<String> listItem = ["Aucune"];
+
   String valueChoose = "Aucune";
 
   String selectedClass = "Aucune";
 
+  String selectedClassHash = "";
+
+  String listClassesHash = "";
+
+  dynamic _calendarData;
+
   dynamic _dropDownItems;
 
-  Future<void> _getGroups() async {
+  // This variable will be used to store the token.
+  String _token = "";
+
+  Future<void> _downloadListClasses() async {
     /*
-      This is an asynchronous function used to load the groups from a JSON file.
+      This is an asynchronous function used to download the list of classes from
+      the server.
     */
 
-    final String response = await rootBundle.loadString('assets/calendar.JSON');
-    final data = await json.decode(response);
+    final response = await http.post(
+        Uri.parse("${Env.urlPrefix}/get_list_classes.php"),
+        body: {"token": _token, "hash": listClassesHash});
 
-    setState(() {
-      _dropDownItems = data["classes"];
-    });
+    var data = json.decode(response.body);
 
+    bool isSuccess = data["isSuccess"];
+
+    if (isSuccess) {
+      bool needUpdate = data["needUpdate"];
+
+      if (needUpdate) {
+        setState(() {
+          listClassesHash = data["classes_data"]["hash"];
+          _dropDownItems = data["classes_data"]["data"];
+        });
+      }
+    }
+  }
+
+  /// Loads the list of classes and put them in [listItem], used later for a
+  /// dropdown.
+  void _loadListClasses() {
     for (var i = 0; i < _dropDownItems.length; i++) {
-      String key = _dropDownItems.keys.elementAt(i);
-
       setState(() {
-        listItem.add(key);
+        listItem.add(_dropDownItems[i]);
       });
     }
   }
@@ -70,21 +101,44 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     await prefs.setString('selectedClass', newSelectedClass);
   }
 
-  Future<void> _getEvents() async {
+  Future<bool> _downloadCalendarData() async {
+    final response = await http
+        .post(Uri.parse("${Env.urlPrefix}/get_calendar.php"), body: {
+      "token": _token,
+      "class": selectedClass,
+      "hash": selectedClassHash
+    });
+
+    var data = json.decode(response.body);
+
+    bool isSuccess = data["isSuccess"];
+
+    if (isSuccess) {
+      bool needUpdate = data["needUpdate"];
+
+      if (needUpdate) {
+        setState(() {
+          selectedClassHash = data["calendar_data"]["hash"];
+          _calendarData = data["calendar_data"]["data"];
+        });
+      }
+    }
+
+    return isSuccess;
+  }
+
+  Future<void> _loadCalendarData() async {
     /*
-      This asynchronous function load the events from a JSON file.
+      This asynchronous function load the events stored in shared preferences.
     */
 
     List _items = [];
-
-    final String response = await rootBundle.loadString('assets/calendar.JSON');
-    final data = await json.decode(response);
 
     setState(() {
       /* Try to load the selected class, if something goes wrong
          it will fail back onto an empty list. */
       try {
-        _items = data["classes"][selectedClass];
+        _items = _calendarData;
       } catch (e) {
         _items = [];
       }
@@ -115,9 +169,12 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     /*
       Reload the list of events to display.
     */
+
     setState(() {
       events = [];
-      _getEvents();
+      _downloadCalendarData().then((_) {
+        _loadCalendarData();
+      });
       _getSelectedClassFromSharedPref();
     });
   }
@@ -125,7 +182,6 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
   List<DateTime> _getDaysInBetween(DateTime startDate, DateTime endDate) {
     /*
       Return the list of all dates between two given dates.
-
       Parameters:
         - startDate: The start date.
         - endDate: The end date.
@@ -153,6 +209,19 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     }
   }
 
+  Future<void> _getToken() async {
+    /*
+      This asynchronous function get the value of the stored token.
+    */
+
+    final prefs = await SharedPreferences.getInstance();
+    final tokenValue = prefs.getString('token');
+
+    setState(() {
+      _token = tokenValue ?? "";
+    });
+  }
+
   // This is the function used to customize the style of a day.
   DayViewStyle _setDayViewStyle(DateTime date) =>
       const DayViewStyle(hourRowHeight: 60 * 2);
@@ -165,14 +234,21 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
 
   @override
   void initState() {
-    _getSelectedClassFromSharedPref().then((_) {
-      _getEvents();
+    _getToken().then((_) {
+      _getSelectedClassFromSharedPref().then((_) {
+        _downloadCalendarData().then((_) {
+          _loadCalendarData();
+        });
+      });
+
+      _downloadListClasses().then((_) {
+        _loadListClasses();
+        _getSelectedClassFromSharedPref()
+            .then((_) => valueChoose = selectedClass);
+      });
     });
 
     _getDatesOfCurrentSchoolYear();
-
-    _getGroups().then((_) => _getSelectedClassFromSharedPref()
-        .then((_) => valueChoose = selectedClass));
 
     super.initState();
   }
@@ -188,8 +264,11 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
               setState(() {
                 valueChoose = newValue as String;
               });
-              _changeSelectedClass(valueChoose);
-              _reloadEvents();
+              // If this is a different value than before, we update the data.
+              if (valueChoose != selectedClass) {
+                _changeSelectedClass(valueChoose);
+                _reloadEvents();
+              }
             },
             items: listItem.map((valueItem) {
               return DropdownMenuItem(
