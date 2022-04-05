@@ -39,7 +39,7 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
   // This variable will be used to store the token.
   String _token = "";
 
-  Future<void> _downloadListClasses() async {
+  Future<bool> _downloadListClasses() async {
     /*
       This is an asynchronous function used to download the list of classes from
       the server.
@@ -62,9 +62,9 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
           _dropDownItems = data["classes_data"]["data"];
         });
       }
-    } else {
-      print(data);
     }
+
+    return isSuccess;
   }
 
   /// Loads the list of classes and put them in [listItem], used later for a
@@ -73,11 +73,16 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     setState(() {
       listItem = ["Aucune"];
     });
+
     for (var i = 0; i < _dropDownItems.length; i++) {
       setState(() {
         listItem.add(_dropDownItems[i]);
       });
     }
+
+    setState(() {
+      listItem.sort();
+    });
   }
 
   Future<void> _getSelectedClassFromSharedPref() async {
@@ -129,8 +134,6 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
           _calendarData = data["calendar_data"]["data"];
         });
       }
-    } else {
-      print(data);
     }
 
     return isSuccess;
@@ -146,17 +149,13 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     setState(() {
       /* Try to load the selected class, if something goes wrong
          it will fail back onto an empty list. */
+
       try {
         _items = _calendarData;
       } catch (e) {
         _items = [];
       }
-
-      //events = [];
     });
-
-    //print("items :");
-    //print(_items);
 
     for (var i = 0; i < _items.length; i++) {
       final DateTime startDate = DateTime.parse(_items[i]['DTSTART']).toLocal();
@@ -180,18 +179,25 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     }
   }
 
-  Future<void> _reloadEvents() async {
+  Future<bool> _reloadEvents() async {
     /*
       Reload the list of events to display.
     */
 
+    bool res = false;
+
     setState(() {
       events = [];
-      _downloadCalendarData().then((_) {
-        _loadCalendarData();
+      _downloadCalendarData().then((isDownloadCalendarDataSuccess) {
+        if (isDownloadCalendarDataSuccess) {
+          _loadCalendarData();
+          res = true;
+        }
       });
       _getSelectedClassFromSharedPref();
     });
+
+    return res;
   }
 
   List<DateTime> _getDaysInBetween(DateTime startDate, DateTime endDate) {
@@ -319,25 +325,37 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
             Icons.refresh,
           ),
           onPressed: () {
-            _downloadListClasses().then((_) {
-              _loadListClasses();
+            _downloadListClasses().then((isDownloadListClassesSuccess) {
+              if (isDownloadListClassesSuccess) {
+                _loadListClasses();
 
-              // If the previously selected class is no longer available, then
-              // we must inform the user, and fall back to the default null
-              // class, "Aucune".
-              if (listItem.contains(selectedClass)) {
-                _reloadEvents().then((_) {
-                  Fluttertoast.showToast(msg: "Données mise à jour.");
-                });
-              } else {
-                _changeSelectedClass("Aucune").then((_) {
-                  _reloadEvents().then((_) {
-                    Fluttertoast.showToast(msg: "Données mise à jour.");
-                    Fluttertoast.showToast(
-                        msg:
-                            "La classe précédemment sélectionnée n'est plus disponible.");
+                // If the previously selected class is no longer available, then
+                // we must inform the user, and fall back to the default null
+                // class, "Aucune".
+                if (listItem.contains(selectedClass)) {
+                  _reloadEvents().then((isReloadEventsSuccess) {
+                    if (isReloadEventsSuccess) {
+                      Fluttertoast.showToast(msg: "Données mise à jour.");
+                    } else {
+                      Fluttertoast.showToast(msg: "Une erreur est survenue.");
+                    }
                   });
-                });
+                } else {
+                  _changeSelectedClass("Aucune").then((_) {
+                    _reloadEvents().then((isReloadEventsSuccess) {
+                      if (isReloadEventsSuccess) {
+                        Fluttertoast.showToast(msg: "Données mise à jour.");
+                      } else {
+                        Fluttertoast.showToast(msg: "Une erreur est survenue.");
+                      }
+                      Fluttertoast.showToast(
+                          msg:
+                              "La classe précédemment sélectionnée n'est plus disponible.");
+                    });
+                  });
+                }
+              } else {
+                Fluttertoast.showToast(msg: "Une erreur est survenue.");
               }
             });
           }),
