@@ -188,14 +188,17 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
 
     setState(() {
       events = [];
-      _downloadCalendarData().then((isDownloadCalendarDataSuccess) {
-        if (isDownloadCalendarDataSuccess) {
-          _loadCalendarData();
-          res = true;
-        }
-      });
-      _getSelectedClassFromSharedPref();
     });
+
+    bool isDownloadCalendarDataSuccess = await _downloadCalendarData();
+
+    if (isDownloadCalendarDataSuccess) {
+      await _loadCalendarData();
+
+      res = true;
+    }
+
+    _getSelectedClassFromSharedPref();
 
     return res;
   }
