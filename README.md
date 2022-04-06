@@ -1,16 +1,21 @@
-# usmb_app
+# USMB App
 
-A new Flutter project.
+---
 
-## Getting Started
+## Avertissement
 
-This project is a starting point for a Flutter application.
+Cette application n'est en rien affiliée à l'Université Savoie Mont Blanc (USMB), par ailleurs, celle-ci est encore en phase de développement, elle ne peut pas être considérée comme fiable, divers problèmes pouvant encore survenir.
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+## À propos
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Cette application permet de consulter l'emploi du temps de l'USMB quasiment en temps réel.
+
+Pour cela, vous devez nécessairement y être étudiant ou enseignant.
+
+---
+
+## Galerie
+
+<img src="file:///home/lotopi/Programmation/Flutter/usmb_app/EXT/usmb_app.gif" title="" alt="usmb_app.gif" data-align="center">
