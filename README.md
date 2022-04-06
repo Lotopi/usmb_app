@@ -18,4 +18,4 @@ Pour cela, vous devez nécessairement y être étudiant ou enseignant.
 
 ## Galerie
 
-<img src="file:///home/lotopi/Programmation/Flutter/usmb_app/EXT/usmb_app.gif" title="" alt="usmb_app.gif" data-align="center">
+<img src="./EXT/usmb_app.gif" title="" alt="usmb_app.gif" data-align="center">
