@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     
    <application
-        android:label="usmb_app"
+        android:label="USMB App"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
