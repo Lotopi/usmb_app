@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -9,6 +10,7 @@ import 'package:flutter_week_view/flutter_week_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:usmb_app/class_selection_page.dart';
 
 import '../env.dart';
 
@@ -22,103 +24,68 @@ class DynamicWeekView extends StatefulWidget {
 
 /// The dynamic week view state.
 class DynamicWeekViewState extends State<DynamicWeekView> {
-  List<String> listItem = ["Aucune"];
+  //List<String> listItem = ["Aucune"];
 
   String valueChoose = "Aucune";
 
   String selectedClass = "Aucune";
 
-  String selectedClassHash = "";
+  String selectedCampus = "";
+
+  String calendarHash = "";
+
+  dynamic classes = [];
 
   String listClassesHash = "";
-
-  dynamic _calendarData;
-
-  dynamic _dropDownItems;
 
   // This variable will be used to store the token.
   String _token = "";
 
-  Future<bool> _downloadListClasses() async {
-    /*
-      This is an asynchronous function used to download the list of classes from
-      the server.
-    */
-
-    final response = await http.post(
-        Uri.parse("${Env.urlPrefix}/get_list_classes.php"),
-        body: {"token": _token, "hash": listClassesHash});
-
-    var data = json.decode(response.body);
-
-    bool isSuccess = data["isSuccess"];
-
-    if (isSuccess) {
-      bool needUpdate = data["needUpdate"];
-
-      if (needUpdate) {
-        setState(() {
-          listClassesHash = data["classes_data"]["hash"];
-          _dropDownItems = data["classes_data"]["data"];
-        });
-      }
-    }
-
-    return isSuccess;
-  }
-
-  /// Loads the list of classes and put them in [listItem], used later for a
-  /// dropdown.
-  void _loadListClasses() {
-    setState(() {
-      listItem = ["Aucune"];
-    });
-
-    for (var i = 0; i < _dropDownItems.length; i++) {
-      setState(() {
-        listItem.add(_dropDownItems[i]);
-      });
-    }
-
-    setState(() {
-      listItem.sort();
-    });
-  }
-
-  Future<void> _getSelectedClassFromSharedPref() async {
-    /*
-      This asynchronous function get the value of 
-      the selected class.
-    */
-
+  /// Gets the value of the stored class.
+  Future<String> _getSelectedClassFromSharedPref() async {
     final prefs = await SharedPreferences.getInstance();
-    final storedSelectedClass = prefs.getString('selectedClass');
+    final storedSelectedClass = prefs.getString('selectedClass') ?? "Aucune";
 
     setState(() {
-      selectedClass = storedSelectedClass ?? "Aucune";
+      selectedClass = storedSelectedClass;
     });
+
+    return storedSelectedClass;
   }
 
-  Future<void> _changeSelectedClass(newSelectedClass) async {
-    /*
-      This asynchronous function store the newly selected value in
-      shared preferences.
-    */
-
+  /// Gets the value of the stored campus.
+  Future<void> _getSelectedCampusFromSharedPref() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedClass', newSelectedClass);
+    final storedSelectedCampus = prefs.getString('campus') ?? "";
 
     setState(() {
-      selectedClass = newSelectedClass;
+      selectedCampus = storedSelectedCampus;
     });
   }
 
+  /// Gets the hash of the stored class.
+  Future<void> _getCalendarHashFromSharedPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedCalendarHash = prefs.getString('calendarHash') ?? "";
+
+    setState(() {
+      calendarHash = storedCalendarHash;
+    });
+  }
+
+  /// Downloads the [calendarData] and stores it in shared preferences, along
+  /// with its [calendarHash].
   Future<bool> _downloadCalendarData() async {
-    final response = await http
-        .post(Uri.parse("${Env.urlPrefix}/get_calendar.php"), body: {
+    final prefs = await SharedPreferences.getInstance();
+
+    String calendarHash = prefs.getString('calendarHash') ?? "none";
+
+    final response =
+        await http.post(Uri.parse("${Env.urlPrefix}/get_calendar.php"), body: {
       "token": _token,
+      "campus": selectedCampus.split('-')[0], // We only need the first word.
       "class": selectedClass,
-      "hash": selectedClassHash
+      "hash": calendarHash
     });
 
     var data = json.decode(response.body);
@@ -129,20 +96,22 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
       bool needUpdate = data["needUpdate"];
 
       if (needUpdate) {
-        setState(() {
-          selectedClassHash = data["calendar_data"]["hash"];
-          _calendarData = data["calendar_data"]["data"];
-        });
+        dynamic calendarData = data["calendar_data"]["data"];
+        dynamic calendarHash = data["calendar_data"]["hash"];
+
+        await prefs.setString('calendarData', jsonEncode(calendarData));
+        await prefs.setString('calendarHash', calendarHash);
       }
     }
 
     return isSuccess;
   }
 
+  /// Loads the events stored in shared preferences.
   Future<void> _loadCalendarData() async {
-    /*
-      This asynchronous function load the events stored in shared preferences.
-    */
+    final prefs = await SharedPreferences.getInstance();
+    dynamic calendarData = prefs.getString('calendarData');
+    calendarData = jsonDecode(calendarData ?? "{}");
 
     List _items = [];
 
@@ -151,7 +120,7 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
          it will fail back onto an empty list. */
 
       try {
-        _items = _calendarData;
+        _items = calendarData;
       } catch (e) {
         _items = [];
       }
@@ -179,20 +148,23 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     }
   }
 
+  /// Reloads the list of events to display.
   Future<bool> _reloadEvents() async {
-    /*
-      Reload the list of events to display.
-    */
-
     bool res = false;
 
-    setState(() {
-      events = [];
-    });
+    bool isDownloadCalendarDataSuccess = false;
 
-    bool isDownloadCalendarDataSuccess = await _downloadCalendarData();
+    try {
+      isDownloadCalendarDataSuccess = await _downloadCalendarData();
+    } on SocketException catch (_) {
+      Fluttertoast.showToast(msg: "Aucune connexion.");
+    }
 
     if (isDownloadCalendarDataSuccess) {
+      setState(() {
+        events = [];
+      });
+
       await _loadCalendarData();
 
       res = true;
@@ -260,17 +232,13 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
   void initState() {
     _getToken().then((_) {
       _getSelectedClassFromSharedPref().then((_) {
-        _downloadCalendarData().then((_) {
-          _loadCalendarData();
-        });
-      });
-
-      _downloadListClasses().then((_) {
-        _loadListClasses();
-        _getSelectedClassFromSharedPref()
-            .then((_) => valueChoose = selectedClass);
+        _loadCalendarData();
       });
     });
+
+    _getSelectedCampusFromSharedPref();
+
+    _getCalendarHashFromSharedPref();
 
     _getDatesOfCurrentSchoolYear();
 
@@ -282,31 +250,55 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          DropdownButton<String>(
-            value: valueChoose,
-            onChanged: (newValue) {
-              setState(() {
-                valueChoose = newValue as String;
-              });
-
-              // If this is a different value than before, then we update the
-              // data.
-              if (valueChoose != selectedClass) {
-                _changeSelectedClass(valueChoose).then((_) {
-                  _reloadEvents();
-                });
-              }
-            },
-            items: listItem.map((valueItem) {
-              return DropdownMenuItem(
-                value: valueItem,
-                child: SizedBox(
-                  child: Text(valueItem),
-                  width: 100,
-                ),
-              );
-            }).toList(),
-          )
+          Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: SizedBox(
+                  width: 150,
+                  child: FutureBuilder<String>(
+                      future: _getSelectedClassFromSharedPref(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<String> snapshot) {
+                        if (!snapshot.hasData) {
+                          return TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ClassSelection()));
+                            },
+                            child: const Text(
+                              "Chargement...",
+                              style: TextStyle(
+                                fontSize: 20.0,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          );
+                        }
+                        return TextButton(
+                          style: ButtonStyle(
+                            foregroundColor:
+                                MaterialStateProperty.all<Color>(Colors.white),
+                          ),
+                          child: Text(
+                            snapshot.data ?? "Aucune",
+                            softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 20.0,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ClassSelection()));
+                          },
+                        );
+                      })))
         ],
         title: const Text("Emploi du temps"),
       ),
@@ -328,35 +320,9 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
             Icons.refresh,
           ),
           onPressed: () {
-            _downloadListClasses().then((isDownloadListClassesSuccess) {
-              if (isDownloadListClassesSuccess) {
-                _loadListClasses();
-
-                // If the previously selected class is no longer available, then
-                // we must inform the user, and fall back to the default null
-                // class, "Aucune".
-                if (listItem.contains(selectedClass)) {
-                  _reloadEvents().then((isReloadEventsSuccess) {
-                    if (isReloadEventsSuccess) {
-                      Fluttertoast.showToast(msg: "Données mise à jour.");
-                    } else {
-                      Fluttertoast.showToast(msg: "Une erreur est survenue.");
-                    }
-                  });
-                } else {
-                  _changeSelectedClass("Aucune").then((_) {
-                    _reloadEvents().then((isReloadEventsSuccess) {
-                      if (isReloadEventsSuccess) {
-                        Fluttertoast.showToast(msg: "Données mise à jour.");
-                      } else {
-                        Fluttertoast.showToast(msg: "Une erreur est survenue.");
-                      }
-                      Fluttertoast.showToast(
-                          msg:
-                              "La classe précédemment sélectionnée n'est plus disponible.");
-                    });
-                  });
-                }
+            _reloadEvents().then((res) {
+              if (res) {
+                Fluttertoast.showToast(msg: "Données mise à jour.");
               } else {
                 Fluttertoast.showToast(msg: "Une erreur est survenue.");
               }
