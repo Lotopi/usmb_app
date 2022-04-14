@@ -24,21 +24,15 @@ class DynamicWeekView extends StatefulWidget {
 
 /// The dynamic week view state.
 class DynamicWeekViewState extends State<DynamicWeekView> {
-  //List<String> listItem = ["Aucune"];
-
-  String valueChoose = "Aucune";
-
   String selectedClass = "Aucune";
 
   String selectedCampus = "";
 
   String calendarHash = "";
 
-  dynamic classes = [];
-
   String listClassesHash = "";
 
-  // This variable will be used to store the token.
+  /// The variable used to store the token.
   String _token = "";
 
   /// Gets the value of the stored class.
@@ -175,14 +169,8 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     return res;
   }
 
+  /// Returns the list of all dates between [startDate] and [endDate].
   List<DateTime> _getDaysInBetween(DateTime startDate, DateTime endDate) {
-    /*
-      Return the list of all dates between two given dates.
-      Parameters:
-        - startDate: The start date.
-        - endDate: The end date.
-    */
-
     List<DateTime> days = [];
     for (int i = 0; i <= endDate.difference(startDate).inDays; i++) {
       days.add(DateTime(startDate.year, startDate.month, startDate.day + i));
@@ -190,10 +178,8 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     return days;
   }
 
+  /// Gets the dates for the current school year.
   void _getDatesOfCurrentSchoolYear() {
-    /*
-      Get the dates for the current school year.
-    */
     DateTime now = DateTime.now();
 
     if (now.month < 07) {
@@ -205,11 +191,8 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     }
   }
 
+  /// Gets the value of the stored token.
   Future<void> _getToken() async {
-    /*
-      This asynchronous function get the value of the stored token.
-    */
-
     final prefs = await SharedPreferences.getInstance();
     final tokenValue = prefs.getString('token');
 
@@ -218,14 +201,14 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     });
   }
 
-  // This is the function used to customize the style of a day.
+  /// Customizes the style of a day.
   DayViewStyle _setDayViewStyle(DateTime date) =>
       const DayViewStyle(hourRowHeight: 60 * 2);
 
-  // The list of events that the calendar must display.
+  /// The list of events that the calendar must display.
   List<FlutterWeekViewEvent> events = [];
 
-  // The list of dates that the calendar must display.
+  /// The list of dates that the calendar must display.
   List<DateTime> dates = [];
 
   @override
