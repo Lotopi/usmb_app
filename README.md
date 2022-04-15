@@ -12,4 +12,4 @@ Pour cela, vous devez nécessairement y être étudiant ou enseignant.
 
 ## Galerie
 
-<img src="./EXT/usmb_app.gif" title="" alt="usmb_app.gif" data-align="center">
+<img title="" src="./EXT/usmb_app_v0.2.0.gif" alt="usmb_app.gif" data-align="center">
