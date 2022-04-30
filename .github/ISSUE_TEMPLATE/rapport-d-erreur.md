@@ -7,6 +7,12 @@ assignees: ''
 
 ---
 
+- [ ] J'ai recherché les possibles doublons dans les problèmes ouverts et fermés.
+- [ ] Je soumets un rapport de bogue pour une fonctionnalité existante qui ne fonctionne pas comme prévu.
+- [ ] Ceci n'est pas une demande de fonctionnalité ou un sujet de discussion
+
+---
+
 **Décrivez le bogue**
 Une description claire et concise du problème.
 
