@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:usmb_app/welcome_page.dart';
 
 import 'dynamic_week_view.dart';
@@ -7,6 +7,9 @@ import 'dynamic_week_view.dart';
 void main() => runApp(_MyApp());
 
 class _MyApp extends StatelessWidget {
+  /// Secure storage
+  final _storage = const FlutterSecureStorage();
+
   Future<bool> _isLoggedIn() async {
     /*
       This asynchronous function return true if the user 
@@ -15,10 +18,9 @@ class _MyApp extends StatelessWidget {
 
     bool res = false;
 
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn');
+    String isLoggedIn = await _storage.read(key: 'isLoggedIn') ?? '';
 
-    if (isLoggedIn == true) {
+    if (isLoggedIn == 'true') {
       res = true;
     }
 

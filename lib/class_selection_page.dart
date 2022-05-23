@@ -3,9 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:usmb_app/dynamic_week_view.dart';
@@ -40,6 +39,9 @@ class _ClassSelectionState extends State<ClassSelection> {
 
   dynamic _classesDropDownItems;
 
+  /// Secure storage
+  final _storage = const FlutterSecureStorage();
+
   /// The list of all the USMB campuses.
   final List<String> _campusList = [
     "Annecy",
@@ -49,11 +51,10 @@ class _ClassSelectionState extends State<ClassSelection> {
 
   /// Gets the value of the stored token.
   Future<void> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    final tokenValue = prefs.getString('token');
+    String tokenValue = await _storage.read(key: 'token') ?? '';
 
     setState(() {
-      _token = tokenValue ?? "";
+      _token = tokenValue;
     });
   }
 
@@ -102,12 +103,10 @@ class _ClassSelectionState extends State<ClassSelection> {
     });
   }
 
-  /// Downloads the [calendarData] and stores it in shared preferences, along
+  /// Downloads the [calendarData] and stores it in a secure storage, along
   /// with its [calendarHash] and the [selectedClass].
   Future<bool> _downloadCalendarData() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    String calendarHash = prefs.getString('calendarHash') ?? "none";
+    String calendarHash = await _storage.read(key: 'calendarHash') ?? '';
 
     final response =
         await http.post(Uri.parse("${Env.urlPrefix}/get_calendar.php"), body: {
@@ -128,12 +127,13 @@ class _ClassSelectionState extends State<ClassSelection> {
         dynamic calendarData = data["calendar_data"]["data"];
         dynamic calendarHash = data["calendar_data"]["hash"];
 
-        await prefs.setString('selectedClass', selectedClass);
-        await prefs.setString('calendarData', jsonEncode(calendarData));
-        await prefs.setString('calendarHash', calendarHash);
+        await _storage.write(key: 'selectedClass', value: selectedClass);
+        await _storage.write(
+            key: 'calendarData', value: jsonEncode(calendarData));
+        await _storage.write(key: 'calendarHash', value: calendarHash);
       }
 
-      await prefs.setString('campus', selectedCampus);
+      await _storage.write(key: 'campus', value: selectedCampus);
     }
 
     return isSuccess;

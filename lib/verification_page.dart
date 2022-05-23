@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,6 +29,9 @@ class _VerificationPageState extends State<VerificationPage> {
   String _token = "";
 
   TextEditingController codeController = TextEditingController();
+
+  // Create storage
+  final _storage = const FlutterSecureStorage();
 
   bool _isGoodFormat(String code) {
     /*
@@ -100,22 +104,20 @@ class _VerificationPageState extends State<VerificationPage> {
       the stored token.
     */
 
-    final prefs = await SharedPreferences.getInstance();
-    final tokenValue = prefs.getString('token');
+    //final prefs = await SharedPreferences.getInstance();
+    //final tokenValue = prefs.getString('token');
+
+    // Read value
+    String tokenValue = await _storage.read(key: 'token') ?? '';
 
     setState(() {
-      _token = tokenValue ?? "";
+      _token = tokenValue;
     });
   }
 
+  /// Stores the state of the user in a secure storage.
   Future<void> _setIsLoggedIn() async {
-    /*
-      This asynchronous function store the state of the user in the
-      shared preferences.
-    */
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
+    await _storage.write(key: 'isLoggedIn', value: 'true');
   }
 
   @override

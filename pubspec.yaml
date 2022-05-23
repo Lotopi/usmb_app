@@ -32,7 +32,7 @@ dependencies:
 
   flutter_week_view: ^1.2.1+1
 
-  shared_preferences: ^2.0.12
+  flutter_secure_storage: ^5.0.2
 
   http: ^0.13.4
 

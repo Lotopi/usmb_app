@@ -6,7 +6,8 @@
     
    <application
         android:label="USMB App"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"> <!-- Disable Auto Backup (Google Drive) -->
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

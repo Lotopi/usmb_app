@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:usmb_app/verification_page.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -25,12 +24,11 @@ class _WelcomePageState extends State<WelcomePage> {
   // The text field controller, used to get it's value.
   TextEditingController emailController = TextEditingController();
 
-  bool _isGoodFormat(String email) {
-    /*
-      @param email: The email to check.
+  /// Secure storage
+  final _storage = const FlutterSecureStorage();
 
-      Checks if the email format is correct.
-    */
+  /// Checks if the [email] format is correct.
+  bool _isGoodFormat(String email) {
     bool res = false;
 
     // The two possible regex patterns of an email.
@@ -45,14 +43,8 @@ class _WelcomePageState extends State<WelcomePage> {
     return res;
   }
 
+  /// Checks if the [email] is correct, validates if it is.
   String? _validateEmail(String? email) {
-    /*
-      @param email: The email to validate or not.
-      @return String: The error message, if any.
-
-      Checks if the email is correct, validates if it is.
-    */
-
     String patternOne = r'(^[a-zA-Z0-9_.+-]+@etu\.univ-smb\.fr$)';
     String patternTwo = r'(^[a-zA-Z0-9_.+-]+@univ-smb\.fr$)';
 
@@ -74,15 +66,8 @@ class _WelcomePageState extends State<WelcomePage> {
     return null;
   }
 
+  /// Sends the email to the API for verification.
   Future<dynamic> _register(email) async {
-    /*
-      @param token: The email to verify.
-      @return dynamic: The server response (json).
-      
-      This asynchronous function sends the email to the API
-      for verification.
-    */
-
     final response = await http.post(Uri.parse("${Env.urlPrefix}/register.php"),
         body: {"email": email});
 
@@ -91,16 +76,9 @@ class _WelcomePageState extends State<WelcomePage> {
     return data;
   }
 
+  /// Saves the newly created token in a secure storage.
   Future<void> _saveToken(token) async {
-    /*
-      @param token: The token to save.
-      
-      This asynchronous function save the newly created token in
-      shared preferences.
-    */
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
+    await _storage.write(key: 'token', value: token);
   }
 
   Widget buildAvertissement() => RichText(
