@@ -195,7 +195,7 @@ class DynamicWeekViewState extends State<DynamicWeekView> {
     String tokenValue = await _storage.read(key: 'token') ?? '';
 
     setState(() {
-      _token = tokenValue ?? "";
+      _token = tokenValue;
     });
   }
 
